@@ -17,6 +17,8 @@ requires = [
     'transaction',
     'zope.sqlalchemy',
     'waitress',
+    'pyramid_jinja2',
+    'docutils',
     ]
 
 setup(name='organized-twitter-client',

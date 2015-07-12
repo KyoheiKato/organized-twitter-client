@@ -2,7 +2,6 @@ import hashlib
 
 from sqlalchemy import (
     Column,
-    Index,
     Integer,
     Text,
     )
@@ -16,16 +15,22 @@ from sqlalchemy.orm import (
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from pyramid.security import (
+    Allow,
+    Everyone,
+    )
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
 class User(Base):
     __tablename__ = 'users'
-
+    query = DBSession.query_property()
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     _password = Column(Text, nullable=False)
+    group = ['USERS']
 
     def __init__(self, name, password):
         self.name = name
@@ -37,13 +42,15 @@ class User(Base):
     def verify_password(self, password):
         return self._password == hashlib.sha1(password.encode('utf-8')).hexdigest()
 
+    @classmethod
+    def find_by_name(cls, name):
+        return cls.query.filter(cls.name == name).first()
+
     password = property(fset=_set_password)
 
 
-class MyModel(Base):
-    __tablename__ = 'models'
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    value = Column(Integer)
+class RootFactory(object):
+    __acl__ = [(Allow, 'USERS', 'view')]
 
-Index('my_index', MyModel.name, unique=True, mysql_length=255)
+    def __init__(self, request):
+        pass
