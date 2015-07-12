@@ -46,6 +46,11 @@ class User(Base):
     def find_by_name(cls, name):
         return cls.query.filter(cls.name == name).first()
 
+    @classmethod
+    def add_user(cls, name, password):
+        user = User(name, password)
+        DBSession.add(user)
+
     password = property(fset=_set_password)
 
 

@@ -8,6 +8,7 @@ from pyramid.view import (
 from pyramid.security import (
     remember,
     forget,
+    authenticated_userid,
     )
 
 from pyramid.httpexceptions import (
@@ -17,7 +18,8 @@ from pyramid.httpexceptions import (
 
 @view_config(route_name='home', renderer='templates/home.jinja2', permission='view')
 def home_view(request):
-    return dict()
+    userid = authenticated_userid(request)
+    return dict(userid=userid)
 
 @forbidden_view_config(renderer='templates/login.jinja2')
 def forbidden_view(request):
@@ -48,4 +50,15 @@ def logout_view(request):
 
 @view_config(route_name='sign_up', renderer='templates/sign_up.jinja2')
 def sign_up_view(request):
-    pass
+    message = ''
+
+    if 'form.submitted' in request.params:
+        name = request.params['username']
+        password = request.params['password']
+        if User.find_by_name(name) is None:
+            User.add_user(name, password)
+            return HTTPFound(location=request.route_url('login'))
+
+        message = 'User is already exist'
+
+    return dict(message=message)
