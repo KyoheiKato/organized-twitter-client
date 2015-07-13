@@ -4,6 +4,7 @@ from sqlalchemy import (
     Column,
     Integer,
     Text,
+    ForeignKey,
     )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,6 +12,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
+    relationship,
+    backref,
     )
 
 from zope.sqlalchemy import ZopeTransactionExtension
@@ -30,6 +33,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     _password = Column(Text, nullable=False)
+    mocks = relationship("Mock", backref="user")
     group = ['USERS']
 
     def __init__(self, name, password):
@@ -48,10 +52,33 @@ class User(Base):
 
     @classmethod
     def add_user(cls, name, password):
-        user = User(name, password)
+        user = cls(name, password)
         DBSession.add(user)
 
     password = property(fset=_set_password)
+
+
+class Mock(Base):
+    __tablename__ = 'mocks'
+    query = DBSession.query_property()
+    id = Column(Integer, primary_key=True)
+    content = Column(Text, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    comments = relationship("Comment", backref="mock")
+
+    def __init__(self, content):
+        self.content = content
+
+
+class Comment(Base):
+    __tablename__ = 'comments'
+    query = DBSession.query_property()
+    id = Column(Integer, primary_key=True)
+    content = Column(Text, nullable=False)
+    mock_id = Column(Integer, ForeignKey('mocks.id'), nullable=False)
+
+    def __init__(self, content):
+        self.content = content
 
 
 class RootFactory(object):
