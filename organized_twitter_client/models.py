@@ -13,14 +13,12 @@ from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
     relationship,
-    backref,
     )
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
 from pyramid.security import (
     Allow,
-    Everyone,
     )
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -47,12 +45,15 @@ class User(Base):
         return self._password == hashlib.sha1(password.encode('utf-8')).hexdigest()
 
     @classmethod
+    def find_by_id(cls, id):
+        return cls.query.filter(cls.id == id).first()
+
+    @classmethod
     def find_by_name(cls, name):
         return cls.query.filter(cls.name == name).first()
 
     @classmethod
-    def add_user(cls, name, password):
-        user = cls(name, password)
+    def add_user(cls, user):
         DBSession.add(user)
 
     password = property(fset=_set_password)
@@ -66,8 +67,21 @@ class Mock(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     comments = relationship("Comment", backref="mock")
 
-    def __init__(self, content):
+    def __init__(self, content, user_id):
         self.content = content
+        self.user_id = user_id
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.all()
+
+    @classmethod
+    def find_by_id(cls, id):
+        return cls.query.filter(cls.id == id).first()
+
+    @classmethod
+    def add_mock(cls, mock):
+        DBSession.add(mock)
 
 
 class Comment(Base):

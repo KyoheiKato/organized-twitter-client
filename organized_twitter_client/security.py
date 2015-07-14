@@ -27,8 +27,8 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def groupfinder(username, request):
-    user = User.find_by_name(username)
+def groupfinder(user_id, request):
+    user = User.find_by_id(user_id)
     if user is not None:
         return User.group
 
